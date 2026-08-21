@@ -2,10 +2,10 @@
   "name": "@indica-facil/baileys-api",
   "version": "1.0.0",
   "description": "Baileys API for WhatsApp.",
-  "author": "gabrieljablonski",
+  "author": "Indica Fácil",
   "repository": {
     "type": "git",
-    "url": "https://github.com/indica-facil/baileys-api.git"
+    "url": "https://github.com/indicafacil-ai/baileys-api.git"
   },
   "license": "MIT",
   "module": "src/index.ts",
