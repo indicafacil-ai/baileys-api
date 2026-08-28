@@ -83,6 +83,10 @@ const mockRedis = {
       stringData.set(key, value);
       if (options?.expiration) {
         expirations.set(key, options.expiration);
+      } else if (options?.EX !== undefined) {
+        // node-redis accepts the TTL either way; recording both is what lets a
+        // spec assert that a marker was written with the lifetime it needs.
+        expirations.set(key, { type: "EX", value: options.EX });
       } else {
         expirations.delete(key);
       }
@@ -98,6 +102,21 @@ const mockRedis = {
     return stringData.has(key) || hashData.has(key) ? 1 : 0;
   }),
   pExpire: mock(async (_key: string, _ttlMs: number) => 1),
+  // -2 when the key is gone, -1 when it has no expiry, else the duration it was
+  // written with. The fake has no clock, so this is the configured lifetime
+  // rather than a true remaining time; a test that cares pins it per call.
+  pTTL: mock(async (key: string) => {
+    if (!stringData.has(key)) {
+      return -2;
+    }
+    const expiration = expirations.get(key);
+    if (!expiration) {
+      return -1;
+    }
+    return expiration.type === "PX"
+      ? expiration.value
+      : expiration.value * 1000;
+  }),
   ping: mock(async () => "PONG"),
   // Emulates the known Lua scripts (dispatched by distinctive content) so the
   // real redisAuthState/leaseStore code paths behave faithfully in tests.
@@ -120,6 +139,72 @@ const mockRedis = {
           stringData.set(key, newValue);
           // Mirror the real SET ... EX: the reclaimed marker carries a TTL.
           expirations.set(key, { type: "EX", value: Number(ttl) });
+          return 1;
+        }
+        return 0;
+      }
+
+      // write-if-ours (compare-and-set): KEYS=[key],
+      // ARGV=[ourProcessingValue, value, ttl, heldFlag]. Writes only over our own
+      // processing marker (and only when we actually hold it) or over nothing,
+      // so a successor's lock or cached result survives.
+      if (script.includes("write-if-ours")) {
+        const [key] = keys;
+        const [expected, value, ttl, held] = args;
+        const raw = stringData.get(key);
+        if (raw === undefined || (held === "1" && raw === expected)) {
+          stringData.set(key, value);
+          expirations.set(key, { type: "EX", value: Number(ttl) });
+          return 1;
+        }
+        return 0;
+      }
+
+      // release-if-ours (compare-and-delete): KEYS=[key], ARGV=[ourMarker].
+      if (script.includes("release-if-ours")) {
+        const [key] = keys;
+        if (stringData.get(key) === args[0]) {
+          stringData.delete(key);
+          expirations.delete(key);
+          return 1;
+        }
+        return 0;
+      }
+
+      // clear-indeterminate (compare-and-delete): KEYS=[key], ARGV=[marker].
+      // Drops the marker only if it is still the exact one the retracting
+      // attempt wrote, so neither a cached result nor a later attempt's own
+      // marker goes with it. Checked before the generic DEL branch below, which
+      // would otherwise claim this script.
+      if (script.includes("clear-indeterminate")) {
+        if (stringData.get(keys[0]) === args[0]) {
+          stringData.delete(keys[0]);
+          expirations.delete(keys[0]);
+          return 1;
+        }
+        return 0;
+      }
+
+      // send-stall-cas (compare-and-set): KEYS=[key],
+      // ARGV=[expected ("" for absent), value, ttlMs].
+      if (script.includes("send-stall-cas")) {
+        const [key] = keys;
+        const [expected, value, ttl] = args;
+        const raw = stringData.get(key);
+        if ((raw === undefined && expected === "") || raw === expected) {
+          stringData.set(key, value);
+          expirations.set(key, { type: "PX", value: Number(ttl) });
+          return 1;
+        }
+        return 0;
+      }
+
+      // send-stall-cad (compare-and-delete): KEYS=[key], ARGV=[expected].
+      if (script.includes("send-stall-cad")) {
+        const [key] = keys;
+        if (stringData.get(key) === args[0]) {
+          stringData.delete(key);
+          expirations.delete(key);
           return 1;
         }
         return 0;
@@ -324,6 +409,12 @@ mock.module("@/config", () => ({
     logLevel: "warn",
     baileys: {
       logLevel: "warn",
+      httpTimeoutMs: 120_000,
+      txAcquireTimeoutMs: 300_000,
+      txHoldWarnMs: 30_000,
+      audioPreprocessTimeoutMs: 20_000,
+      sendTimeoutMs: 45_000,
+      sendStallRestartEnabled: false,
       clientVersion: "default",
       overrideClientVersion: false,
       ignoreGroupMessages: false,
@@ -335,6 +426,8 @@ mock.module("@/config", () => ({
       listenToEvents: new Set<string>(),
     },
     webhook: {
+      timeoutMs: 60_000,
+      historyFrameMaxBytes: 512 * 1024,
       retryPolicy: {
         maxRetries: 0,
         retryInterval: 10,
@@ -453,6 +546,8 @@ function createMockSocket() {
     signalRepository: {
       lidMapping: {
         getPNForLID: mock(async () => null),
+        getLIDForPN: mock(async () => null),
+        getPNsForLIDs: mock(async () => null),
       },
     },
   };
@@ -549,6 +644,17 @@ mock.module("@whiskeysockets/baileys", () => ({
     reviver: (_key: string, value: any) => value,
   },
   proto: {
+    HistorySync: {
+      HistorySyncType: {
+        INITIAL_BOOTSTRAP: 0,
+        INITIAL_STATUS_V3: 1,
+        FULL: 2,
+        RECENT: 3,
+        PUSH_NAME: 4,
+        NON_BLOCKING_DATA: 5,
+        ON_DEMAND: 6,
+      },
+    },
     Message: {
       AppStateSyncKeyData: {
         fromObject: (obj: any) => ({ ...obj, __appStateSyncKey: true }),
