@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "@indica-facil/baileys-api",
-    "description": "Baileys API for WhatsApp. [See on GitHub](https://github.com/indica-facil/baileys-api.git)",
+    "title": "@indicafacil/baileys-api",
+    "description": "Baileys API for WhatsApp. [See on GitHub](https://github.com/indicafacil-ai/baileys-api.git)",
     "version": "1.0.0"
   },
   "servers": [
@@ -105,7 +105,7 @@
                             },
                             "url": {
                               "type": "string",
-                              "example": "https://github.com/indica-facil/baileys-api.git"
+                              "example": "https://github.com/indicafacil-ai/baileys-api.git"
                             }
                           }
                         }

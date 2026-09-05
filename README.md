@@ -1,6 +1,6 @@
 # Baileys API
 
-<a href="https://apps-id.indicafacil.app?utm_source=github&utm_medium=en&utm_campaign=baileys-api"><img alt="apps-id.indicafacil.app logo" src="https://framerusercontent.com/images/HqY9djLTzyutSKnuLLqBr92KbM.png?scale-down-to=256" height="75"/></a>
+<a href="https://indicafacil.ai?utm_source=github&utm_medium=en&utm_campaign=baileys-api"><img alt="Indica Fácil logo" src="https://framerusercontent.com/images/HqY9djLTzyutSKnuLLqBr92KbM.png?scale-down-to=256" height="75"/></a>
 
 <a href="https://github.com/WhiskeySockets/Baileys"><img alt="Baileys logo" src="https://raw.githubusercontent.com/WhiskeySockets/Baileys/refs/heads/master/Media/logo.png" height="75"/></a>
 
@@ -21,14 +21,14 @@ This project provides an API interface for interacting with WhatsApp using the [
 >
 > Thus, we do not store WhatsApp messages or any other data (aside from credentials for auto-reconnecting).
 >
-> If you need a chat application with a database, consider using our fork of [Chatwoot](https://github.com/indica-facil/chatwoot/), which integrates with this API.
+> If you need a chat application with a database, consider using our fork of [Chatwoot](https://github.com/indicafacil-ai/chatwoot/), which integrates with this API.
 
 ## Functionality
 
 The API exposes the following endpoints. Keep in mind this project is in early development, and many features are still being implemented.
 
 > [!NOTE]
-> See also our [Swagger documentation](https://indica-facil.github.io/baileys-api/) for a more detailed overview of the API.
+> See also our [OpenAPI specification](swagger.json) for a more detailed overview of the API.
 
 ### Status
 

@@ -2,7 +2,7 @@ version: "3"
 
 services:
   baileys-api:
-    image: "ghcr.io/indica-facil/baileys-api:latest"
+    image: "ghcr.io/indicafacil-ai/baileys-api:latest"
     pull_policy: always
     volumes:
       - "storage:/app/storage"
