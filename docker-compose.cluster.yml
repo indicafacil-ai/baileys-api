@@ -22,7 +22,7 @@
 
 services:
   proxy:
-    image: "ghcr.io/indica-facil/baileys-api:${BAILEYS_API_IMAGE_TAG:-latest}"
+    image: "ghcr.io/indicafacil-ai/baileys-api:${BAILEYS_API_IMAGE_TAG:-latest}"
     # The image ships no CMD (deploy tooling injects it); without this the
     # container falls through to bun's CLI help and restart-loops.
     command: ["bun", "start"]
@@ -45,7 +45,7 @@ services:
       retries: 10
 
   worker-1:
-    image: "ghcr.io/indica-facil/baileys-api:${BAILEYS_API_IMAGE_TAG:-latest}"
+    image: "ghcr.io/indicafacil-ai/baileys-api:${BAILEYS_API_IMAGE_TAG:-latest}"
     # The image ships no CMD (deploy tooling injects it); without this the
     # container falls through to bun's CLI help and restart-loops.
     command: ["bun", "start"]
@@ -71,7 +71,7 @@ services:
       retries: 10
 
   worker-2:
-    image: "ghcr.io/indica-facil/baileys-api:${BAILEYS_API_IMAGE_TAG:-latest}"
+    image: "ghcr.io/indicafacil-ai/baileys-api:${BAILEYS_API_IMAGE_TAG:-latest}"
     # The image ships no CMD (deploy tooling injects it); without this the
     # container falls through to bun's CLI help and restart-loops.
     command: ["bun", "start"]
