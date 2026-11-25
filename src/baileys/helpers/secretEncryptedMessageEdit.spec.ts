@@ -9,14 +9,14 @@ import {
 } from "./secretEncryptedMessageEdit";
 
 const TARGET_KEY = {
-  remoteJid: "89572297961476@lid",
+  remoteJid: "20000000000002@lid",
   fromMe: true,
   id: "3EB078E05D8F792B76A79F",
 };
 
 function upsert(message: any) {
   return {
-    key: { remoteJid: "167392323834034@lid", fromMe: false, id: "edit-1" },
+    key: { remoteJid: "100000000000001@lid", fromMe: false, id: "edit-1" },
     message,
   } as any;
 }

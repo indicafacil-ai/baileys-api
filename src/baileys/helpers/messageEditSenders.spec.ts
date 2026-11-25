@@ -4,21 +4,21 @@ import {
   messageEditSenderCandidates,
 } from "./messageEditSenders";
 
-const ME = { id: "5511936199421:12@s.whatsapp.net", lid: "89572297961476@lid" };
+const ME = { id: "5511999990001:12@s.whatsapp.net", lid: "20000000000002@lid" };
 
 describe("messageAuthorJids", () => {
   it("gives both addressing forms of an incoming author, LID first", () => {
     expect(
       messageAuthorJids(
         {
-          remoteJid: "167392323834034@lid",
-          remoteJidAlt: "553499503261@s.whatsapp.net",
+          remoteJid: "100000000000001@lid",
+          remoteJidAlt: "553499990001@s.whatsapp.net",
           fromMe: false,
           id: "x",
         },
         ME,
       ),
-    ).toEqual(["167392323834034@lid", "553499503261@s.whatsapp.net"]);
+    ).toEqual(["100000000000001@lid", "553499990001@s.whatsapp.net"]);
   });
 
   it("prefers the participant in a group", () => {
@@ -26,55 +26,55 @@ describe("messageAuthorJids", () => {
       messageAuthorJids(
         {
           remoteJid: "120363000000000000@g.us",
-          participant: "167392323834034@lid",
-          participantAlt: "553499503261@s.whatsapp.net",
+          participant: "100000000000001@lid",
+          participantAlt: "553499990001@s.whatsapp.net",
           fromMe: false,
           id: "x",
         },
         ME,
       ),
-    ).toEqual(["167392323834034@lid", "553499503261@s.whatsapp.net"]);
+    ).toEqual(["100000000000001@lid", "553499990001@s.whatsapp.net"]);
   });
 
   it("answers with our own JIDs for our own message", () => {
     expect(
       messageAuthorJids(
-        { remoteJid: "167392323834034@lid", fromMe: true, id: "x" },
+        { remoteJid: "100000000000001@lid", fromMe: true, id: "x" },
         ME,
       ),
-    ).toEqual(["89572297961476@lid", "5511936199421@s.whatsapp.net"]);
+    ).toEqual(["20000000000002@lid", "5511999990001@s.whatsapp.net"]);
   });
 
   // The device suffix is per-session and never part of the derivation.
   it("strips the device suffix", () => {
     expect(
       messageAuthorJids(
-        { remoteJid: "167392323834034:58@lid", fromMe: false, id: "x" },
+        { remoteJid: "100000000000001:58@lid", fromMe: false, id: "x" },
         ME,
       ),
-    ).toEqual(["167392323834034@lid"]);
+    ).toEqual(["100000000000001@lid"]);
   });
 
   it("drops duplicates and blanks", () => {
     expect(
       messageAuthorJids(
         {
-          remoteJid: "167392323834034@lid",
-          remoteJidAlt: "167392323834034@lid",
+          remoteJid: "100000000000001@lid",
+          remoteJidAlt: "100000000000001@lid",
           participant: "",
           fromMe: false,
           id: "x",
         },
         ME,
       ),
-    ).toEqual(["167392323834034@lid"]);
+    ).toEqual(["100000000000001@lid"]);
   });
 });
 
 describe("messageEditSenderCandidates", () => {
   const editKey = {
-    remoteJid: "167392323834034@lid",
-    remoteJidAlt: "553499503261@s.whatsapp.net",
+    remoteJid: "100000000000001@lid",
+    remoteJidAlt: "553499990001@s.whatsapp.net",
     fromMe: false,
     id: "edit-1",
   };
@@ -87,7 +87,7 @@ describe("messageEditSenderCandidates", () => {
       messageEditSenderCandidates({
         editKey,
         targetKey: {
-          remoteJid: "89572297961476@lid",
+          remoteJid: "20000000000002@lid",
           fromMe: true,
           id: "orig-1",
         },
@@ -95,20 +95,20 @@ describe("messageEditSenderCandidates", () => {
       }),
     ).toEqual([
       {
-        origMsgSender: "167392323834034@lid",
-        editSender: "167392323834034@lid",
+        origMsgSender: "100000000000001@lid",
+        editSender: "100000000000001@lid",
       },
       {
-        origMsgSender: "167392323834034@lid",
-        editSender: "553499503261@s.whatsapp.net",
+        origMsgSender: "100000000000001@lid",
+        editSender: "553499990001@s.whatsapp.net",
       },
       {
-        origMsgSender: "553499503261@s.whatsapp.net",
-        editSender: "167392323834034@lid",
+        origMsgSender: "553499990001@s.whatsapp.net",
+        editSender: "100000000000001@lid",
       },
       {
-        origMsgSender: "553499503261@s.whatsapp.net",
-        editSender: "553499503261@s.whatsapp.net",
+        origMsgSender: "553499990001@s.whatsapp.net",
+        editSender: "553499990001@s.whatsapp.net",
       },
     ]);
   });
@@ -118,13 +118,13 @@ describe("messageEditSenderCandidates", () => {
   it("takes the original author from the target key when it is not theirs", () => {
     const candidates = messageEditSenderCandidates({
       editKey,
-      targetKey: { remoteJid: "89572297961476@lid", fromMe: false, id: "o" },
+      targetKey: { remoteJid: "20000000000002@lid", fromMe: false, id: "o" },
       me: ME,
     });
 
     expect(candidates.map((c) => c.origMsgSender)).toEqual([
-      "89572297961476@lid",
-      "89572297961476@lid",
+      "20000000000002@lid",
+      "20000000000002@lid",
     ]);
   });
 
@@ -133,25 +133,25 @@ describe("messageEditSenderCandidates", () => {
   it("appends the stored authors after the derived one", () => {
     const candidates = messageEditSenderCandidates({
       editKey,
-      targetKey: { remoteJid: "89572297961476@lid", fromMe: false, id: "o" },
+      targetKey: { remoteJid: "20000000000002@lid", fromMe: false, id: "o" },
       me: ME,
-      storedSenders: ["167392323834034@lid"],
+      storedSenders: ["100000000000001@lid"],
     });
 
     expect(candidates.map((c) => c.origMsgSender)).toEqual([
-      "89572297961476@lid",
-      "89572297961476@lid",
-      "167392323834034@lid",
-      "167392323834034@lid",
+      "20000000000002@lid",
+      "20000000000002@lid",
+      "100000000000001@lid",
+      "100000000000001@lid",
     ]);
   });
 
   it("does not repeat a stored author already derived", () => {
     const candidates = messageEditSenderCandidates({
       editKey,
-      targetKey: { remoteJid: "89572297961476@lid", fromMe: false, id: "o" },
+      targetKey: { remoteJid: "20000000000002@lid", fromMe: false, id: "o" },
       me: ME,
-      storedSenders: ["89572297961476@lid"],
+      storedSenders: ["20000000000002@lid"],
     });
 
     expect(candidates).toHaveLength(2);
