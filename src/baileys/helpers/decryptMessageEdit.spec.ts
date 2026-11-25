@@ -8,8 +8,8 @@ import {
 
 const ORIG_MSG_ID = "3EB078E05D8F792B76A79F";
 const SENDERS: MessageEditSenders = {
-  origMsgSender: "167392323834034@lid",
-  editSender: "167392323834034@lid",
+  origMsgSender: "100000000000001@lid",
+  editSender: "100000000000001@lid",
 };
 
 // Mirrors what WhatsApp does on the sending side, so a round trip exercises the
@@ -100,8 +100,8 @@ describe("decryptMessageEdit", () => {
   it("keeps trying until a candidate verifies, and reports which one", () => {
     const { encPayload, encIv } = seal(plaintext, messageSecret, SENDERS);
     const wrong: MessageEditSenders = {
-      origMsgSender: "553499503261@s.whatsapp.net",
-      editSender: "553499503261@s.whatsapp.net",
+      origMsgSender: "553499990001@s.whatsapp.net",
+      editSender: "553499990001@s.whatsapp.net",
     };
 
     const result = decryptMessageEdit({

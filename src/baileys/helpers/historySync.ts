@@ -145,7 +145,7 @@ export function exhaustedChats(
 //
 // A dump strips `groupName` from the messages (see the History translator on the client
 // side), so an imported group has nothing to be called by and lands under its own jid --
-// `120363418525571303` where a name belongs. The subject is in the dump the whole time,
+// `120363400000000001` where a name belongs. The subject is in the dump the whole time,
 // on the chat records, which we otherwise drop.
 //
 // Dropping them is still right for everything else they carry: on a mature account the

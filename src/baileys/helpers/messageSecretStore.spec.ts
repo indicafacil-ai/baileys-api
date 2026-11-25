@@ -15,7 +15,7 @@ const expirations = (redis as any).__expirations as Map<
   { type: string; value: number }
 >;
 
-const PHONE = "+5511936199421";
+const PHONE = "+5511999990001";
 const MESSAGE_ID = "3EB078E05D8F792B76A79F";
 const SECRET = Buffer.alloc(32, 3);
 
@@ -29,13 +29,13 @@ describe("messageSecretStore", () => {
 
   it("round-trips the secret and its authors", async () => {
     await rememberMessageSecret(PHONE, MESSAGE_ID, SECRET, [
-      "167392323834034@lid",
-      "553499503261@s.whatsapp.net",
+      "100000000000001@lid",
+      "553499990001@s.whatsapp.net",
     ]);
 
     expect(await recallMessageSecret(PHONE, MESSAGE_ID)).toEqual({
       secret: SECRET,
-      senders: ["167392323834034@lid", "553499503261@s.whatsapp.net"],
+      senders: ["100000000000001@lid", "553499990001@s.whatsapp.net"],
     });
   });
 
@@ -99,7 +99,7 @@ describe("messageSecretStore", () => {
   it("answers null on an entry with no secret", async () => {
     hashData.set(
       messageSecretKey(PHONE, MESSAGE_ID),
-      new Map([["jid:167392323834034@lid", "1"]]),
+      new Map([["jid:100000000000001@lid", "1"]]),
     );
 
     expect(await recallMessageSecret(PHONE, MESSAGE_ID)).toBeNull();
@@ -110,8 +110,8 @@ describe("messageSecretStore", () => {
   // form where the live copy carried two. Letting the poorer copy overwrite the
   // richer one leaves an edit encrypted under the dropped form undecryptable.
   it("keeps a sender form a later, poorer copy of the message dropped", async () => {
-    const lid = "167392323834034@lid";
-    const pn = "553499503261@s.whatsapp.net";
+    const lid = "100000000000001@lid";
+    const pn = "553499990001@s.whatsapp.net";
     await rememberMessageSecret(PHONE, MESSAGE_ID, SECRET, [lid, pn]);
 
     await rememberMessageSecret(PHONE, MESSAGE_ID, SECRET, [lid]);
@@ -127,7 +127,7 @@ describe("messageSecretStore", () => {
     const reads = (redis as any).hGetAll.mock.calls.length;
 
     await rememberMessageSecret(PHONE, MESSAGE_ID, SECRET, [
-      "167392323834034@lid",
+      "100000000000001@lid",
     ]);
 
     expect((redis as any).hGetAll.mock.calls.length).toBe(reads);

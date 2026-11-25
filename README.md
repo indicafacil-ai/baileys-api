@@ -43,7 +43,7 @@ The API exposes the following endpoints. Keep in mind this project is in early d
 - `POST /connections/:phoneNumber/read-messages`: Marks messages as read.
 - `DELETE /connections/:phoneNumber`: Logs out and disconnects a WhatsApp connection.
 - `POST /connections/:phoneNumber/restart`: Recreates the socket for a connection, keeping its session (no QR, no re-pairing).
-- `GET /connections/:phoneNumber/health`: Send-side health for a connection. See "Silent send stalls" below.
+- `GET /connections/:phoneNumber/health`: Send- and receive-side health for a connection. See "Silent send stalls" and "Deaf sockets" below.
 
 > [!IMPORTANT]
 > The `phoneNumber` parameter in the URL should be in the format `+<country_code><phone_number>`, e.g. `+551234567890`.
@@ -99,6 +99,14 @@ What this API provides:
 > tell the caller it is safe to retry, and answers `409` with
 > `x-baileys-idempotency-state: indeterminate` instead.
 
+### Deaf sockets
+
+The mirror image of a send stall: the socket is open, sends go out, and nothing arrives, neither messages nor receipts. After every (re)connect WhatsApp delivers the queue it held for the device and closes it with an end-of-queue marker, which Baileys reports as `connection.update` with `receivedPendingNotifications: true`. When the server is stuck behind a stanza it is waiting an ack for, the marker never comes, and nothing behind it is delivered either. This is how an unacked `<status>` stanza left sockets deaf for hours (#404).
+
+- **Detection.** `GET /connections/:phoneNumber/health` reports `receiveState`: `pending` until the marker arrives for the current socket, `ok` once it has, `stalled` when the socket has been open for 2 minutes without it. `openForMs` says how long the current socket has been open. Both reset when the socket is replaced. A healthy socket gets the marker within a few seconds of opening, so a `stalled` inbox that only receives no longer looks healthy just because nobody is sending through it.
+- **A `warn` log line** is written once per socket when it turns `stalled`, so a deployment running at `warn` sees it without polling.
+- **No automatic recovery.** While the cause is there, every new socket comes back just as deaf, so the API does not recreate it on its own. Once the cause is gone (a fixed release, for instance), `POST /connections/:phoneNumber/restart` recovers the connection without a QR.
+
 ### Admin
 
 - `POST /admin/connections/logout-all`: Logs out all active WhatsApp connections. (Requires admin role API key)
@@ -111,7 +119,7 @@ This project includes a [`docker-compose.coolify.yml`](./docker-compose.coolify.
 
 The provided Docker Compose file is configured to work within a Coolify environment that has an existing Redis instance on the same network. The API will connect to this Redis instance using the `REDIS_URL` and `REDIS_PASSWORD` environment variables that you should provide in the environment variables section of the Coolify dashboard.
 
-The compose file also automates the creation of a default API key. This key is generated using `SERVICE_PASSWORD_64_DEFAULTAPIKEY` (an auto-generated Coolify service password) and can be retrieved from the service's environment variables in the Coolify dashboard.
+The compose file also sets up a default API key. Its value is `SERVICE_PASSWORD_64_DEFAULTAPIKEY` (an auto-generated Coolify service password), passed to the container as `BAILEYS_PROVIDER_DEFAULT_API_KEY`, and can be retrieved from the service's environment variables in the Coolify dashboard. The API registers it as a `user` key on every boot, logging only its fingerprint (the first 8 hex characters of its sha256).
 
 ### Other Docker Environments
 
@@ -122,7 +130,8 @@ The `docker-compose.coolify.yml` can be adapted for other Docker environments. Y
     - Alternatively, you can add a new Redis service definition to the `docker-compose.yml` file.
 2.  **API Key Management**:
     - In production/non-development environments, authentication is required. The `manage-api-keys.ts` script is used to create and manage API keys.
-    - The provided `docker-compose.coolify.yml` automatically creates a user API key using the command: `bun manage-api-keys create user ${SERVICE_PASSWORD_64_DEFAULTAPIKEY}`. You can adapt this or run the script manually within the container or a separate environment to generate your API keys.
+    - Set `BAILEYS_PROVIDER_DEFAULT_API_KEY` and the API registers that key with the `user` role at boot, keeping its role if it already exists (a key promoted to `admin` stays `admin`). This is what the provided `docker-compose.coolify.yml` does, so the key never appears on a command line. Deployments whose compose still runs `bun manage-api-keys create user <key> && bun start` keep working unchanged, and the key no longer shows up in their logs.
+    - You can also run the script manually within the container or a separate environment to manage your API keys. It prints a key only when it generated it; a key you pass is shown by its fingerprint.
     - To create an API key manually:
       ```bash
       bun scripts/manage-api-keys.ts create <role> [key]
